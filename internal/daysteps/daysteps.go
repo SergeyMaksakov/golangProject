@@ -1,13 +1,69 @@
 package daysteps
 
+import (
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/Yandex-Practicum/tracker/internal/personaldata"
+	"github.com/Yandex-Practicum/tracker/internal/spentenergy"
+)
+
+// DaySteps содержит данные о дневных прогулках и персональные данные пользователя.
 type DaySteps struct {
-	// TODO: добавить поля
+	Steps    int
+	Duration time.Duration
+	personaldata.Personal
 }
 
+// Parse разбирает строку с данными о прогулке формата "678,0h50m" и записывает их в поля структуры.
 func (ds *DaySteps) Parse(datastring string) (err error) {
-	// TODO: реализовать функцию
+	parts := strings.Split(datastring, ",")
+	if len(parts) != 2 {
+		return errors.New("неверный формат данных для прогулки")
+	}
+
+	// Парсим количество шагов
+	steps, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return fmt.Errorf("ошибка конвертации шагов: %w", err)
+	}
+	if steps < 0 {
+		return errors.New("количество шагов не может быть отрицательным")
+	}
+	ds.Steps = steps
+
+	// Парсим длительность
+	duration, err := time.ParseDuration(parts[1])
+	if err != nil {
+		return fmt.Errorf("ошибка парсинга длительности: %w", err)
+	}
+	if duration <= 0 {
+		return errors.New("длительность прогулки должна быть больше нуля")
+	}
+	ds.Duration = duration
+
+	return nil
 }
 
+// ActionInfo формирует и возвращает строку с информацией о дневной активности.
 func (ds DaySteps) ActionInfo() (string, error) {
-	// TODO: реализовать функцию
+	// Вычисляем дистанцию
+	distance := spentenergy.Distance(ds.Steps, ds.Height)
+
+	// Вычисляем сожженные калории для ходьбы
+	calories, err := spentenergy.WalkingSpentCalories(ds.Steps, ds.Weight, ds.Height, ds.Duration)
+	if err != nil {
+		return "", err
+	}
+
+	// Формируем итоговую строку
+	info := fmt.Sprintf(
+		"Количество шагов: %d.\nДистанция составила %.2f км.\nВы сожгли %.2f ккал.",
+		ds.Steps, distance, calories,
+	)
+
+	return info, nil
 }
