@@ -25,17 +25,15 @@ func (ds *DaySteps) Parse(datastring string) (err error) {
 		return errors.New("неверный формат данных для прогулки")
 	}
 
-	// Парсим количество шагов
 	steps, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return fmt.Errorf("ошибка конвертации шагов: %w", err)
 	}
-	if steps < 0 {
-		return errors.New("количество шагов не может быть отрицательным")
+	if steps <= 0 { // Изменили с < 0 на <= 0, чтобы ловить ноль
+		return errors.New("количество шагов должно быть больше нуля")
 	}
 	ds.Steps = steps
 
-	// Парсим длительность
 	duration, err := time.ParseDuration(parts[1])
 	if err != nil {
 		return fmt.Errorf("ошибка парсинга длительности: %w", err)
@@ -50,18 +48,16 @@ func (ds *DaySteps) Parse(datastring string) (err error) {
 
 // ActionInfo формирует и возвращает строку с информацией о дневной активности.
 func (ds DaySteps) ActionInfo() (string, error) {
-	// Вычисляем дистанцию
 	distance := spentenergy.Distance(ds.Steps, ds.Height)
 
-	// Вычисляем сожженные калории для ходьбы
 	calories, err := spentenergy.WalkingSpentCalories(ds.Steps, ds.Weight, ds.Height, ds.Duration)
 	if err != nil {
 		return "", err
 	}
 
-	// Формируем итоговую строку
+	
 	info := fmt.Sprintf(
-		"Количество шагов: %d.\nДистанция составила %.2f км.\nВы сожгли %.2f ккал.",
+		"Количество шагов: %d.\nДистанция составила %.2f км.\nВы сожгли %.2f ккал.\n",
 		ds.Steps, distance, calories,
 	)
 

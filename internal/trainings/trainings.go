@@ -26,20 +26,17 @@ func (t *Training) Parse(datastring string) (err error) {
 		return errors.New("неверный формат данных для тренировки")
 	}
 
-	// 1-3. Парсим количество шагов
 	steps, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return fmt.Errorf("ошибка конвертации шагов: %w", err)
 	}
-	if steps < 0 {
-		return errors.New("количество шагов не может быть отрицательным")
+	if steps <= 0 { // Изменили с < 0 на <= 0
+		return errors.New("количество шагов должно быть больше нуля")
 	}
 	t.Steps = steps
 
-	// 4. Сохраняем тип тренировки
 	t.TrainingType = parts[1]
 
-	// 5. Парсим продолжительность (time.Duration)
 	duration, err := time.ParseDuration(parts[2])
 	if err != nil {
 		return fmt.Errorf("ошибка парсинга длительности: %w", err)
@@ -54,13 +51,9 @@ func (t *Training) Parse(datastring string) (err error) {
 
 // ActionInfo формирует и возвращает строку с подробной информацией о тренировке.
 func (t Training) ActionInfo() (string, error) {
-	// 1. Вычисляем дистанцию
 	distance := spentenergy.Distance(t.Steps, t.Height)
-
-	// 2. Вычисляем среднюю скорость
 	speed := spentenergy.MeanSpeed(t.Steps, t.Height, t.Duration)
 
-	// 3. Рассчитываем калории в зависимости от типа тренировки
 	var calories float64
 	var err error
 
@@ -77,9 +70,9 @@ func (t Training) ActionInfo() (string, error) {
 		return "", err
 	}
 
-	// 4. Формируем и возвращаем итоговую строку
+	
 	info := fmt.Sprintf(
-		"Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f",
+		"Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f\n",
 		t.TrainingType, t.Duration.Hours(), distance, speed, calories,
 	)
 
